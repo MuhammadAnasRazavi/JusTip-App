@@ -144,6 +144,10 @@ fun TipCalculatorLayout(modifier: Modifier = Modifier) {
 
     val split = (splitInput.roundToInt()).toDouble()
 
+    var reset by remember {
+        mutableStateOf(false)
+    }
+
     val totalTipInDouble = calculateTip(amount, tipPercent)
 
     val totalTipAmount = formatValue(totalTipInDouble)
@@ -181,7 +185,16 @@ fun TipCalculatorLayout(modifier: Modifier = Modifier) {
             totalBill = totalBillAmount,
             totalTip = totalTipAmount,
             totalBillPerPerson = totalBillPerPerson,
-            totalTipPerPerson = totalTipPerPerson
+            totalTipPerPerson = totalTipPerPerson,
+            reset = {
+                reset = it
+                if (reset) {
+                    amountInput = ""
+                    tipPercentInput = 15f
+                    splitInput = 5f
+                    reset = false
+                }
+            }
         )
         Spacer(modifier = Modifier.height(25.dp))
     }
@@ -335,6 +348,7 @@ fun BillAndTipOutputCard(
     totalTip: String,
     totalBillPerPerson: String,
     totalTipPerPerson: String,
+    reset: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
@@ -371,18 +385,18 @@ fun BillAndTipOutputCard(
                 perPerson = "/ person",
                 billAndTipValue = totalTipPerPerson
             )
-//            ElevatedButton(
-//                colors = ButtonDefaults.elevatedButtonColors(
-//                    containerColor = Color.White,
-//                    contentColor = Color(121, 74, 250)
-//                ),
-//                onClick = { /*TODO*/ },
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(horizontal = 45.dp)
-//            ) {
-//                Text(text = "Reset")
-//            }
+            ElevatedButton(
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = Color.White,
+                    contentColor = Color(121, 74, 250)
+                ),
+                onClick =  { reset(true) } ,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 45.dp)
+            ) {
+                Text(text = "Reset")
+            }
         }
     }
 }
