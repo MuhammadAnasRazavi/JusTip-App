@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -55,7 +54,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -64,6 +62,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.justip.ui.theme.JusTipTheme
 import java.text.NumberFormat
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
@@ -148,7 +148,21 @@ fun TipCalculatorLayout(modifier: Modifier = Modifier) {
         mutableStateOf(false)
     }
 
+    var defaultSelect by remember {
+        mutableStateOf(true)
+    }
+
+    var roundUpSelect by remember {
+        mutableStateOf(false)
+    }
+
+    var roundDownSelect by remember {
+        mutableStateOf(false)
+    }
+
     val totalTipInDouble = calculateTip(amount, tipPercent)
+
+    val totalTip = roundTheTip(totalTipInDouble, roundUpSelect, roundDownSelect)
 
     val totalTipAmount = formatValue(totalTipInDouble)
 
@@ -178,8 +192,27 @@ fun TipCalculatorLayout(modifier: Modifier = Modifier) {
             splitInput = splitInput,
             onChangeSplitInput = { splitInput = it }
         )
-//        Spacer(modifier = Modifier.height(50.dp))
-//        RoundTheTipRow()
+        Spacer(modifier = Modifier.height(50.dp))
+        RoundTheTip(
+            defaultSelect = defaultSelect,
+            roundUpSelect = roundUpSelect,
+            roundDownSelect = roundDownSelect,
+            defaultValue = {
+                defaultSelect = it
+                roundUpSelect = false
+                roundDownSelect = false
+            },
+            roundUpValue = {
+                roundUpSelect = it
+                defaultSelect = false
+                roundDownSelect = false
+            },
+            roundDownValue = {
+                roundDownSelect = it
+                defaultSelect = false
+                roundUpSelect = false
+            }
+        )
         Spacer(modifier = Modifier.height(50.dp))
         BillAndTipOutputCard(
             totalBill = totalBillAmount,
@@ -192,6 +225,9 @@ fun TipCalculatorLayout(modifier: Modifier = Modifier) {
                     amountInput = ""
                     tipPercentInput = 15f
                     splitInput = 5f
+                    defaultSelect = true
+                    roundUpSelect = false
+                    roundDownSelect = false
                     reset = false
                 }
             }
@@ -434,14 +470,15 @@ fun BillAndTipValueRow(
 }
 
 @Composable
-fun RoundTheTipRow(modifier: Modifier = Modifier) {
-
-    val roundOptions = listOf("Default", "Round Down", "Round Up")
-
-    var (selectedOption, onOptionSelected) = remember {
-        mutableStateOf(roundOptions[0])
-    }
-
+fun RoundTheTip(
+    defaultSelect: Boolean,
+    roundUpSelect: Boolean,
+    roundDownSelect: Boolean,
+    defaultValue: (Boolean) -> Unit,
+    roundUpValue: (Boolean) -> Unit,
+    roundDownValue: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -458,34 +495,39 @@ fun RoundTheTipRow(modifier: Modifier = Modifier) {
                 .padding(start = 20.dp)
         )
         Column(
-            Modifier
+            modifier = Modifier
+                .padding(20.dp)
                 .selectableGroup()
-                .padding(vertical = 20.dp)
         ) {
-            roundOptions.forEach { text ->
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .selectable(
-                            selected = (text == selectedOption),
-                            onClick = { onOptionSelected(text) },
-                            role = Role.RadioButton
-                        )
-                        .padding(horizontal = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = (text == selectedOption),
-                        onClick = null,
-                        colors = RadioButtonDefaults.colors(Color(121, 74, 250))
-                    )
-                    Text(
-                        text = text,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(start = 16.dp)
-                    )
-                }
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = defaultSelect,
+                    onClick = { defaultValue(true) },
+                    colors = RadioButtonDefaults.colors(Color(121, 74, 250))
+                )
+                Text(text = "Default")
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = roundUpSelect,
+                    onClick = { roundUpValue(true) },
+                    colors = RadioButtonDefaults.colors(Color(121, 74, 250))
+                )
+                Text(text = "Round Up")
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = roundDownSelect,
+                    onClick = { roundDownValue(true) },
+                    colors = RadioButtonDefaults.colors(Color(121, 74, 250))
+                )
+                Text(text = "Round Down")
             }
         }
     }
@@ -503,10 +545,20 @@ private fun calculateTip(amount: Double, tipPercent: Double): Double {
     return tipPercent / 100 * amount
 }
 
-private fun formatValue(value: Double): String {
+private fun formatValue(value: Any): String {
     return NumberFormat.getCurrencyInstance().format(value)
 }
 
 private fun split(value: Double, split: Double): Double {
-    return value.div(split)
+    return value.div(value)
+}
+
+private fun roundTheTip(
+    totalTipInDouble: Double,
+    roundUpSelect: Boolean,
+    roundDownSelect: Boolean
+): Any {
+    return if (roundUpSelect) ceil(totalTipInDouble)
+    else if (roundDownSelect) floor(totalTipInDouble)
+    else totalTipInDouble
 }
