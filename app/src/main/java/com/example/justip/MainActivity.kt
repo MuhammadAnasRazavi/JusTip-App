@@ -126,17 +126,29 @@ fun TipCalculatorLayout(modifier: Modifier = Modifier) {
         mutableStateOf(15f)
     }
 
-    var split by remember {
+    val tipPercent = (tipPercentInput.roundToInt()).toDouble()
+
+    var splitInput by remember {
         mutableStateOf(5f)
     }
 
-    val totalTip = calculateTip(amount, (tipPercentInput.roundToInt()).toDouble())
+    val split = (splitInput.roundToInt()).toDouble()
 
-    val totalTipInDouble = calculateTipInDouble(amount, (tipPercentInput.toInt()).toDouble())
+    val totalTipInDouble = calculateTip(amount, tipPercent)
 
-    val totalTipPerPerson = totalTipInDouble / (split.roundToInt()).toDouble()
+    val totalTipAmount = formatValue(totalTipInDouble)
 
-    val formattedTotalTipPerson = formatTotalTipPerPerson(totalTipPerPerson)
+    val totalBillInDouble = amount.plus(totalTipInDouble)
+
+    val totalBillAmount = formatValue(totalBillInDouble)
+
+    val totalBillPerPersonInDouble = split(totalBillInDouble, split)
+
+    val totalBillPerPerson = formatValue(totalBillPerPersonInDouble)
+
+    val totalTipPerPersonInDouble = split(totalTipInDouble, split)
+
+    val totalTipPerPerson = formatValue(totalTipPerPersonInDouble)
 
     Column(
         modifier = modifier
@@ -149,15 +161,15 @@ fun TipCalculatorLayout(modifier: Modifier = Modifier) {
             onChangeAmount = { amountInput = it },
             tipPercentInput = tipPercentInput,
             onChangeTipPercentInput = { tipPercentInput = it },
-            splitInput = split,
-            onChangeSplitInput = { split = it }
+            splitInput = splitInput,
+            onChangeSplitInput = { splitInput = it }
         )
         Spacer(modifier = Modifier.height(50.dp))
         BillAndTipOutputCard(
-            totalBill = 0.0,
-            totalTip = totalTip,
-            totalBillPerPerson = 0.0,
-            totalTipPerPerson = formattedTotalTipPerson
+            totalBill = totalBillAmount,
+            totalTip = totalTipAmount,
+            totalBillPerPerson = totalBillPerPerson,
+            totalTipPerPerson = totalTipPerPerson
         )
         Spacer(modifier = Modifier.height(25.dp))
     }
@@ -309,9 +321,9 @@ fun SplitColumn(
 
 @Composable
 fun BillAndTipOutputCard(
-    totalBill: Double,
+    totalBill: String,
     totalTip: String,
-    totalBillPerPerson: Double,
+    totalBillPerPerson: String,
     totalTipPerPerson: String,
     modifier: Modifier = Modifier
 ) {
@@ -381,18 +393,18 @@ fun BillAndTipValueRow(
         ) {
             Text(
                 text = billAndTipText,
-                fontSize = 25.sp
+                fontSize = 20.sp
             )
             if (perPerson.isNotEmpty()) {
                 Text(
                     text = perPerson,
-                    fontSize = 20.sp
+                    fontSize = 15.sp
                 )
             }
         }
         Text(
             text = billAndTipValue,
-            fontSize = 35.sp
+            fontSize = 30.sp
         )
     }
 }
@@ -405,15 +417,14 @@ fun GreetingPreview() {
     }
 }
 
-private fun calculateTip(amount: Double, tipPercent: Double): String {
-    val tip = tipPercent / 100 * amount
-    return NumberFormat.getCurrencyInstance().format(tip)
-}
-
-private fun calculateTipInDouble(amount: Double, tipPercent: Double): Double {
+private fun calculateTip(amount: Double, tipPercent: Double): Double {
     return tipPercent / 100 * amount
 }
 
-private fun formatTotalTipPerPerson(tip: Double): String {
-    return NumberFormat.getCurrencyInstance().format(tip)
+private fun formatValue(value: Double): String {
+    return NumberFormat.getCurrencyInstance().format(value)
+}
+
+private fun split(value: Double, split: Double): Double {
+    return value.div(split)
 }
