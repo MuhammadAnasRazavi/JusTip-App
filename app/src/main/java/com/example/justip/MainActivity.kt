@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,22 +15,29 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -45,7 +53,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -164,6 +174,8 @@ fun TipCalculatorLayout(modifier: Modifier = Modifier) {
             splitInput = splitInput,
             onChangeSplitInput = { splitInput = it }
         )
+//        Spacer(modifier = Modifier.height(50.dp))
+//        RoundTheTipRow()
         Spacer(modifier = Modifier.height(50.dp))
         BillAndTipOutputCard(
             totalBill = totalBillAmount,
@@ -241,12 +253,10 @@ fun EditNumberField(
         },
         singleLine = true,
         leadingIcon = {
-            Image(
-                imageVector = Icons.Filled.Email,
+            Icon(
+                painter = painterResource(id = R.drawable.baseline_money_24),
                 contentDescription = null,
-                colorFilter = ColorFilter.tint(
-                    Color(121, 74, 250)
-                )
+                tint = Color(121, 74, 250)
             )
         },
         keyboardOptions = keyboardOptions,
@@ -344,7 +354,7 @@ fun BillAndTipOutputCard(
             BillAndTipValueRow(
                 billAndTipText = "Bill Amount",
                 perPerson = "",
-                billAndTipValue = totalBill.toString()
+                billAndTipValue = totalBill
             )
             BillAndTipValueRow(
                 billAndTipText = "Tip Amount",
@@ -354,25 +364,25 @@ fun BillAndTipOutputCard(
             BillAndTipValueRow(
                 billAndTipText = "Bill Amount",
                 perPerson = "/ person",
-                billAndTipValue = totalBillPerPerson.toString()
+                billAndTipValue = totalBillPerPerson
             )
             BillAndTipValueRow(
                 billAndTipText = "Tip Amount",
                 perPerson = "/ person",
                 billAndTipValue = totalTipPerPerson
             )
-            ElevatedButton(
-                colors = ButtonDefaults.elevatedButtonColors(
-                    containerColor = Color.White,
-                    contentColor = Color(121, 74, 250)
-                ),
-                onClick = { /*TODO*/ },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 45.dp, end = 45.dp, top = 20.dp, bottom = 10.dp)
-            ) {
-                Text(text = "Reset")
-            }
+//            ElevatedButton(
+//                colors = ButtonDefaults.elevatedButtonColors(
+//                    containerColor = Color.White,
+//                    contentColor = Color(121, 74, 250)
+//                ),
+//                onClick = { /*TODO*/ },
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(horizontal = 45.dp)
+//            ) {
+//                Text(text = "Reset")
+//            }
         }
     }
 }
@@ -406,6 +416,64 @@ fun BillAndTipValueRow(
             text = billAndTipValue,
             fontSize = 30.sp
         )
+    }
+}
+
+@Composable
+fun RoundTheTipRow(modifier: Modifier = Modifier) {
+
+    val roundOptions = listOf("Default", "Round Down", "Round Up")
+
+    var (selectedOption, onOptionSelected) = remember {
+        mutableStateOf(roundOptions[0])
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Text(
+            text = stringResource(id = R.string.round_the_tip),
+            color = Color.White,
+            fontSize = 35.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .background(Color(121, 74, 250))
+                .wrapContentHeight(Alignment.CenterVertically)
+                .wrapContentWidth(Alignment.Start)
+                .padding(start = 20.dp)
+        )
+        Column(
+            Modifier
+                .selectableGroup()
+                .padding(vertical = 20.dp)
+        ) {
+            roundOptions.forEach { text ->
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .selectable(
+                            selected = (text == selectedOption),
+                            onClick = { onOptionSelected(text) },
+                            role = Role.RadioButton
+                        )
+                        .padding(horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = (text == selectedOption),
+                        onClick = null,
+                        colors = RadioButtonDefaults.colors(Color(121, 74, 250))
+                    )
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+            }
+        }
     }
 }
 
