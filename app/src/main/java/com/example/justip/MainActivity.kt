@@ -160,9 +160,7 @@ fun TipCalculatorLayout(modifier: Modifier = Modifier) {
         mutableStateOf(false)
     }
 
-    val totalTipInDouble = calculateTip(amount, tipPercent)
-
-    val totalTip = roundTheTip(totalTipInDouble, roundUpSelect, roundDownSelect)
+    var totalTipInDouble = calculateTip(amount, tipPercent, roundUpSelect, roundDownSelect)
 
     val totalTipAmount = formatValue(totalTipInDouble)
 
@@ -170,11 +168,11 @@ fun TipCalculatorLayout(modifier: Modifier = Modifier) {
 
     val totalBillAmount = formatValue(totalBillInDouble)
 
-    val totalBillPerPersonInDouble = split(totalBillInDouble, split)
+    val totalBillPerPersonInDouble = split(totalBillInDouble, split, roundUpSelect, roundDownSelect)
 
     val totalBillPerPerson = formatValue(totalBillPerPersonInDouble)
 
-    val totalTipPerPersonInDouble = split(totalTipInDouble, split)
+    val totalTipPerPersonInDouble = split(totalTipInDouble, split, roundUpSelect, roundDownSelect)
 
     val totalTipPerPerson = formatValue(totalTipPerPersonInDouble)
 
@@ -426,7 +424,7 @@ fun BillAndTipOutputCard(
                     containerColor = Color.White,
                     contentColor = Color(121, 74, 250)
                 ),
-                onClick =  { reset(true) } ,
+                onClick = { reset(true) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 45.dp)
@@ -541,24 +539,31 @@ fun GreetingPreview() {
     }
 }
 
-private fun calculateTip(amount: Double, tipPercent: Double): Double {
-    return tipPercent / 100 * amount
+private fun calculateTip(
+    amount: Double,
+    tipPercent: Double,
+    roundUpSelect: Boolean,
+    roundDownSelect: Boolean
+): Double {
+    val tip = tipPercent / 100 * amount
+
+    return if (roundUpSelect) ceil(tip)
+    else if (roundDownSelect) floor(tip)
+    else tip
 }
 
-private fun formatValue(value: Any): String {
+private fun formatValue(value: Double): String {
     return NumberFormat.getCurrencyInstance().format(value)
 }
 
-private fun split(value: Double, split: Double): Double {
-    return value.div(value)
-}
-
-private fun roundTheTip(
-    totalTipInDouble: Double,
+private fun split(
+    value: Double,
+    split: Double,
     roundUpSelect: Boolean,
     roundDownSelect: Boolean
-): Any {
-    return if (roundUpSelect) ceil(totalTipInDouble)
-    else if (roundDownSelect) floor(totalTipInDouble)
-    else totalTipInDouble
+): Double {
+    val split = value.div(split)
+    return if (roundUpSelect) ceil(split)
+    else if (roundDownSelect) floor(split)
+    else split
 }
